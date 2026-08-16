@@ -7,8 +7,8 @@ const path = require('path');
 
 const BASE = '{{BASE_URL}}';
 
-function req(name, method, url, { folder = 'General', auth = null, clinicaId = null, body = null, test = null } = {}) {
-  return { name, folder, method, url, auth, clinicaId, body, test };
+function req(name, method, url, { folder = 'General', auth = null, clinicaId = null, body = null, test = null, supabaseAuth = false } = {}) {
+  return { name, folder, method, url, auth, clinicaId, body, test, supabaseAuth };
 }
 
 // ---------------------------------------------------------------
@@ -24,28 +24,34 @@ const requests = [
   // --- Auth ---
   req('Login Vet', 'POST', `{{SUPABASE_URL}}/auth/v1/token?grant_type=password`, {
     folder: '2. Auth Tokens',
+    supabaseAuth: true,
     body: { email: '{{VET_EMAIL}}', password: '{{VET_PASSWORD}}' },
     test: () => {
       const d = pm.response.json();
-      pm.test('login vet ok', () => { if (d.access_token) pm.environment.set('VET_TOKEN', d.access_token); });
+      pm.environment.set('VET_TOKEN', d.access_token || '');
+      pm.test('login vet obtiene token', () => pm.expect(d.access_token).to.be.a('string').and.not.empty);
       pm.test('status 200', () => pm.response.to.have.status(200));
     },
   }),
   req('Login Admin', 'POST', `{{SUPABASE_URL}}/auth/v1/token?grant_type=password`, {
     folder: '2. Auth Tokens',
+    supabaseAuth: true,
     body: { email: '{{ADMIN_EMAIL}}', password: '{{ADMIN_PASSWORD}}' },
     test: () => {
       const d = pm.response.json();
-      pm.test('login admin ok', () => { if (d.access_token) pm.environment.set('ADMIN_TOKEN', d.access_token); });
+      pm.environment.set('ADMIN_TOKEN', d.access_token || '');
+      pm.test('login admin obtiene token', () => pm.expect(d.access_token).to.be.a('string').and.not.empty);
       pm.test('status 200', () => pm.response.to.have.status(200));
     },
   }),
   req('Login Cliente', 'POST', `{{SUPABASE_URL}}/auth/v1/token?grant_type=password`, {
     folder: '2. Auth Tokens',
+    supabaseAuth: true,
     body: { email: '{{CLIENTE_EMAIL}}', password: '{{CLIENTE_PASSWORD}}' },
     test: () => {
       const d = pm.response.json();
-      pm.test('login cliente ok', () => { if (d.access_token) pm.environment.set('CLIENTE_TOKEN', d.access_token); });
+      pm.environment.set('CLIENTE_TOKEN', d.access_token || '');
+      pm.test('login cliente obtiene token', () => pm.expect(d.access_token).to.be.a('string').and.not.empty);
       pm.test('status 200', () => pm.response.to.have.status(200));
     },
   }),
@@ -57,8 +63,8 @@ const requests = [
     test: () => {
       pm.test('responde 200', () => pm.response.to.have.status(200));
       const d = pm.response.json();
-      pm.test('trae datos de clínica', () => pm.expect(d).to.have.property('id_clinica'));
-      if (d && d.id_clinica) pm.environment.set('ID_CLINICA', String(d.id_clinica));
+      pm.test('trae datos de clínica', () => pm.expect(d).to.have.property('clinica'));
+      if (d && d.clinica && d.clinica.id) pm.environment.set('ID_CLINICA', String(d.clinica.id));
     },
   }),
 
@@ -220,6 +226,7 @@ function buildRequest(r) {
   const headers = [];
   if (r.auth) headers.push({ key: 'Authorization', value: `Bearer ${r.auth}`, type: 'text' });
   if (r.clinicaId) headers.push({ key: 'X-Clinica-Id', value: '{{ID_CLINICA}}', type: 'text' });
+  if (r.supabaseAuth) headers.push({ key: 'apikey', value: '{{SUPABASE_ANON_KEY}}', type: 'text' });
   headers.push({ key: 'Content-Type', value: 'application/json', type: 'text' });
 
   const item = {

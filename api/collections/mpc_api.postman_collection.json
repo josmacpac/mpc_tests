@@ -46,6 +46,11 @@
             "method": "POST",
             "header": [
               {
+                "key": "apikey",
+                "value": "{{SUPABASE_ANON_KEY}}",
+                "type": "text"
+              },
+              {
                 "key": "Content-Type",
                 "value": "application/json",
                 "type": "text"
@@ -70,7 +75,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "const d = pm.response.json();",
-                  "pm.test('login vet ok', () => { if (d.access_token) pm.environment.set('VET_TOKEN', d.access_token); });",
+                  "pm.environment.set('VET_TOKEN', d.access_token || '');",
+                  "pm.test('login vet obtiene token', () => pm.expect(d.access_token).to.be.a('string').and.not.empty);",
                   "pm.test('status 200', () => pm.response.to.have.status(200));"
                 ]
               }
@@ -82,6 +88,11 @@
           "request": {
             "method": "POST",
             "header": [
+              {
+                "key": "apikey",
+                "value": "{{SUPABASE_ANON_KEY}}",
+                "type": "text"
+              },
               {
                 "key": "Content-Type",
                 "value": "application/json",
@@ -107,7 +118,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "const d = pm.response.json();",
-                  "pm.test('login admin ok', () => { if (d.access_token) pm.environment.set('ADMIN_TOKEN', d.access_token); });",
+                  "pm.environment.set('ADMIN_TOKEN', d.access_token || '');",
+                  "pm.test('login admin obtiene token', () => pm.expect(d.access_token).to.be.a('string').and.not.empty);",
                   "pm.test('status 200', () => pm.response.to.have.status(200));"
                 ]
               }
@@ -119,6 +131,11 @@
           "request": {
             "method": "POST",
             "header": [
+              {
+                "key": "apikey",
+                "value": "{{SUPABASE_ANON_KEY}}",
+                "type": "text"
+              },
               {
                 "key": "Content-Type",
                 "value": "application/json",
@@ -144,7 +161,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "const d = pm.response.json();",
-                  "pm.test('login cliente ok', () => { if (d.access_token) pm.environment.set('CLIENTE_TOKEN', d.access_token); });",
+                  "pm.environment.set('CLIENTE_TOKEN', d.access_token || '');",
+                  "pm.test('login cliente obtiene token', () => pm.expect(d.access_token).to.be.a('string').and.not.empty);",
                   "pm.test('status 200', () => pm.response.to.have.status(200));"
                 ]
               }
@@ -183,8 +201,8 @@
                 "exec": [
                   "pm.test('responde 200', () => pm.response.to.have.status(200));",
                   "const d = pm.response.json();",
-                  "pm.test('trae datos de clínica', () => pm.expect(d).to.have.property('id_clinica'));",
-                  "if (d && d.id_clinica) pm.environment.set('ID_CLINICA', String(d.id_clinica));"
+                  "pm.test('trae datos de clínica', () => pm.expect(d).to.have.property('clinica'));",
+                  "if (d && d.clinica && d.clinica.id) pm.environment.set('ID_CLINICA', String(d.clinica.id));"
                 ]
               }
             }
