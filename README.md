@@ -54,22 +54,67 @@ Configuración raíz con **3 proyectos** (`vet`, `admin`, `clientes`). Las crede
 cd mpc_tests
 npm install
 npx playwright install chromium   # una sola vez
-
-# Elegir proyecto (interactivo)
-npm run test:choose
-
-# O directo por proyecto
-npm run test:vet
-npm run test:admin
-npm run test:clientes
-npm test                            # todos los proyectos
 ```
 
-- `vet`  → https://mpc-vet-dev.netlify.app (login + mascotas ya escritos)
-- `admin` → https://mpc-admin-development.netlify.app (smoke)
-- `clientes` → URL pendiente en `qa.config.js` (la prueba se salta hasta configurarla)
+### Correr las pruebas (desde la terminal)
 
-Los specs viven en `vet/tests/`, `admin/tests/`, `clientes/tests/`. Helpers compartidos en `vet/helpers.js`. Los reportes HTML van a `playwright-report/` (ignorada por git).
+Elige proyecto de forma interactiva:
+
+```bash
+npm run test:choose
+```
+
+O directo por proyecto / todos:
+
+```bash
+npm run test:vet        # solo vet (7 pruebas: login, mascotas, citas, reportes, clientes, articulos)
+npm run test:admin      # solo admin (4 pruebas: login, clinicas, subir logo)
+npm run test:clientes   # solo clientes (se salta hasta configurar su URL)
+npm test                # todos los proyectos
+```
+
+Solo un archivo de pruebas:
+
+```bash
+npx playwright test --project=vet vet/tests/login.spec.js
+```
+
+Reporte HTML (se abre en navegador, se guarda en `playwright-report/`):
+
+```bash
+npx playwright show-report
+```
+
+### Qué cubre cada proyecto
+
+- **vet** (https://mpc-vet-dev.netlify.app) — `vet/tests/`: login correcto, login inválido, vista de mascotas, y carga de citas/reportes/clientes/artículos. Helper de login en `vet/helpers.js`.
+- **admin** (https://mpc-admin-development.netlify.app) — `admin/tests/`: login, carga de clínicas, y **subida de logo** de la Clinica Demo (id 4) contra la API dev. Fixture en `admin/fixtures/logo-test.png`.
+- **clientes** — pendiente: define su URL en `qa.config.js` (campo `clientes.baseURL`) y la prueba dejará de saltarse.
+
+> **Ojo:** la prueba de logo sobrescribe el logo real de la clínica 4 en el entorno dev. Es esperado.
+
+## Newman (API)
+
+Las pruebas de API viven en `api/` (ver `api/README.md`).
+
+```bash
+cd api
+npm install
+npm test                 # corre toda la colección (login + health + vet + admin + portal)
+npm run test:log         # igual y además guarda reports/result.json y result-junit.xml
+npm run test:html        # genera reports/report.html (visual)
+npm run test:auth        # solo el login (verifica credenciales)
+```
+
+Credenciales de prueba en `api/environments/mpc_dev.postman_environment.json`.
+
+## Cuentas de prueba (entorno dev)
+
+| Cuenta | Rol | Email | Password |
+|---|---|---|---|
+| demo | Vet (clínica 4) | demo@y3n.store | d3mo53 |
+| Test_user1 | Admin | test_user1@y3n.store | Test1_user_2026 |
+| Test_user2 | Cliente portal | test_user2@y3n.store | Test2_user_2026 |
 
 ## Notas
 
