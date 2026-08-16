@@ -103,13 +103,24 @@ Reporte HTML de Playwright:
 npx playwright show-report
 ```
 
+> **Workers:** por defecto Playwright corre con 1 worker (`workers: 1`) para no saturar la
+> API de Render (plan free). Si quieres más velocidad (y una API más tolerante), sobrescribe
+> con `PW_WORKERS=2 npx playwright test --project=vet`.
+
 ### Qué cubre cada proyecto
 
-- **vet** (https://mpc-vet-dev.netlify.app) — `vet/tests/`: login correcto, login inválido, vista de mascotas, y carga de citas/reportes/clientes/artículos. Helper de login en `vet/helpers.js`.
+- **vet** (https://mpc-vet-dev.netlify.app) — `vet/tests/`:
+  - login correcto, login inválido, vista de mascotas, carga de citas/reportes/clientes/artículos
+  - **crear cliente** (`clientes.spec.js`): registra un cliente único y lo busca en la tabla
+  - **registrar consulta + receta** (`consulta.spec.js`): selecciona cliente/mascota, llena signos vitales, genera receta y verifica el Swal de confirmación
+  - **crear cita** (`citas.spec.js`): flujo completo (cliente → mascota → fecha → vet → servicio → horario). **Se salta** ("skipped") si el veterinario no tiene turnos configurados en `horarios_veterinarios` — se activa sola cuando existan.
+  - **logout** (`logout.spec.js`): cierra sesión, regresa a `login.html` y deja el `localStorage` limpio
+  - Helpers en `vet/helpers.js` (incluyen llamadas a la API dev para obtener un cliente con mascotas).
 - **admin** (https://mpc-admin-development.netlify.app) — `admin/tests/`: login, carga de clínicas, y **subida de logo** de la Clinica Demo (id 4) contra la API dev. Fixture en `admin/fixtures/logo-test.png`.
 - **clientes** — pendiente: define su URL en `qa.config.js` (campo `clientes.baseURL`) y la prueba dejará de saltarse.
 
 > **Ojo:** la prueba de logo sobrescribe el logo real de la clínica 4 en el entorno dev. Es esperado.
+> **Ojo:** las pruebas de crear cliente / consulta / cita **escriben datos** en la base dev de la clínica 4. Es esperado.
 
 ## Newman (API)
 

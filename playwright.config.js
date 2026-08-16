@@ -4,7 +4,8 @@ const config = require('./qa.config.js');
 module.exports = defineConfig({
   testDir: './',
   timeout: 45000,
-  fullyParallel: true,
+  fullyParallel: false,
+  workers: process.env.PW_WORKERS ? Number(process.env.PW_WORKERS) : 1,
   reporter: [
     ['list'],
     ['html', { outputFolder: 'playwright-report', open: 'never' }],
