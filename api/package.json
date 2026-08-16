@@ -5,9 +5,12 @@
   "scripts": {
     "build": "node build-collection.js",
     "test": "newman run collections/mpc_api.postman_collection.json -e environments/mpc_dev.postman_environment.json",
-    "test:auth": "newman run collections/mpc_api.postman_collection.json -e environments/mpc_dev.postman_environment.json --folder \"2. Auth Tokens\""
+    "test:auth": "newman run collections/mpc_api.postman_collection.json -e environments/mpc_dev.postman_environment.json --folder \"2. Auth Tokens\"",
+    "test:log": "newman run collections/mpc_api.postman_collection.json -e environments/mpc_dev.postman_environment.json -r cli,json,junit --reporter-json-export reports/result.json --reporter-junit-export reports/result-junit.xml",
+    "test:html": "newman run collections/mpc_api.postman_collection.json -e environments/mpc_dev.postman_environment.json -r htmlextra --reporter-htmlextra-export reports/report.html"
   },
   "devDependencies": {
-    "newman": "^6.2.1"
+    "newman": "^6.2.1",
+    "newman-reporter-htmlextra": "^1.23.1"
   }
 }
