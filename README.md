@@ -46,40 +46,58 @@ newman run collections/mpc_api.postman_collection.json \
 
 Los endpoints requieren JWT de Supabase: la colección obtiene el token en un pre-request o usa variables `TOKEN_*` del environment.
 
-## Playwright (frontends)
+## Cómo correr las pruebas (todo desde la terminal)
 
-Configuración raíz con **3 proyectos** (`vet`, `admin`, `clientes`). Las credenciales y URLs de cada entorno se definen en `qa.config.js`.
+Un solo script te pregunta **a qué ambiente** apuntar y **qué pruebas** correr:
+
+```bash
+cd mpc_tests
+./run.sh
+```
+
+Menús: primero elige ambiente (1=local, 2=dev, 3=prod con confirmación) y luego las pruebas
+(1=Newman API, 2=Playwright vet, 3=Playwright admin, 4=Playwright clientes, 5=Todo).
+
+### Ambientes (`environments/`)
+
+Cada archivo `.env` trae las URLs y los usuarios test. El script los carga y los pasa a
+Newman y a Playwright automáticamente.
+
+| Archivo | Uso |
+|---|---|
+| `environments/dev.env`  | Render + Netlify dev (recomendado) |
+| `environments/local.env`| API local + frontends en localhost |
+| `environments/prod.env` | Producción real (pide confirmación) |
+
+Para cambiar las URLs o credenciales de prueba, edita el `.env` correspondiente (o agrega
+un nuevo archivo). Sin el script, los defaults quedan en `qa.config.js` y en
+`api/environments/mpc_dev.postman_environment.json`.
+
+### Instalación previa (una sola vez)
 
 ```bash
 cd mpc_tests
 npm install
-npx playwright install chromium   # una sola vez
+npx playwright install chromium
 ```
 
-### Correr las pruebas (desde la terminal)
-
-Elige proyecto de forma interactiva:
+### Ejecución directa (sin el script)
 
 ```bash
-npm run test:choose
+npm run test:choose        # selector interactivo de proyecto Playwright
+npm run test:vet           # Playwright vet
+npm run test:admin         # Playwright admin
+npm run test:clientes      # Playwright clientes
+npm test                   # Playwright: todos los proyectos
+
+cd api
+npm test                   # Newman: toda la colección
+npm run test:log           # + guarda reports/result.json y result-junit.xml
+npm run test:html          # + genera reports/report.html
+npm run test:auth          # solo login (verifica credenciales)
 ```
 
-O directo por proyecto / todos:
-
-```bash
-npm run test:vet        # solo vet (7 pruebas: login, mascotas, citas, reportes, clientes, articulos)
-npm run test:admin      # solo admin (4 pruebas: login, clinicas, subir logo)
-npm run test:clientes   # solo clientes (se salta hasta configurar su URL)
-npm test                # todos los proyectos
-```
-
-Solo un archivo de pruebas:
-
-```bash
-npx playwright test --project=vet vet/tests/login.spec.js
-```
-
-Reporte HTML (se abre en navegador, se guarda en `playwright-report/`):
+Reporte HTML de Playwright:
 
 ```bash
 npx playwright show-report
@@ -95,18 +113,8 @@ npx playwright show-report
 
 ## Newman (API)
 
-Las pruebas de API viven en `api/` (ver `api/README.md`).
-
-```bash
-cd api
-npm install
-npm test                 # corre toda la colección (login + health + vet + admin + portal)
-npm run test:log         # igual y además guarda reports/result.json y result-junit.xml
-npm run test:html        # genera reports/report.html (visual)
-npm run test:auth        # solo el login (verifica credenciales)
-```
-
-Credenciales de prueba en `api/environments/mpc_dev.postman_environment.json`.
+Las pruebas de API viven en `api/` (ver `api/README.md`). El script `run.sh` las corre
+pasando las URLs/credenciales del ambiente elegido; también puedes correrlas directo:
 
 ## Cuentas de prueba (entorno dev)
 
