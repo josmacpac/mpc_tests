@@ -48,16 +48,28 @@ Los endpoints requieren JWT de Supabase: la colección obtiene el token en un pr
 
 ## Playwright (frontends)
 
-En cada carpeta de frontend:
+Configuración raíz con **3 proyectos** (`vet`, `admin`, `clientes`). Las credenciales y URLs de cada entorno se definen en `qa.config.js`.
 
 ```bash
-npm init -y
-npm i -D @playwright/test
-npx playwright install chromium
-npx playwright test
+cd mpc_tests
+npm install
+npx playwright install chromium   # una sola vez
+
+# Elegir proyecto (interactivo)
+npm run test:choose
+
+# O directo por proyecto
+npm run test:vet
+npm run test:admin
+npm run test:clientes
+npm test                            # todos los proyectos
 ```
 
-Configurar `baseURL` en `playwright.config.js` apuntando al deploy dev correspondiente.
+- `vet`  → https://mpc-vet-dev.netlify.app (login + mascotas ya escritos)
+- `admin` → https://mpc-admin-development.netlify.app (smoke)
+- `clientes` → URL pendiente en `qa.config.js` (la prueba se salta hasta configurarla)
+
+Los specs viven en `vet/tests/`, `admin/tests/`, `clientes/tests/`. Helpers compartidos en `vet/helpers.js`. Los reportes HTML van a `playwright-report/` (ignorada por git).
 
 ## Notas
 

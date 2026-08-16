@@ -10,3 +10,4 @@ test-results/
 *.log
 reports/
 .DS_Store
+storageState-*.json
