@@ -1,0 +1,13 @@
+{
+  "name": "mpc-tests-api",
+  "private": true,
+  "description": "Pruebas Newman de la API MyPetCare (entornos de desarrollo)",
+  "scripts": {
+    "build": "node build-collection.js",
+    "test": "newman run collections/mpc_api.postman_collection.json -e environments/mpc_dev.postman_environment.json",
+    "test:auth": "newman run collections/mpc_api.postman_collection.json -e environments/mpc_dev.postman_environment.json --folder \"2. Auth Tokens\""
+  },
+  "devDependencies": {
+    "newman": "^6.2.1"
+  }
+}
