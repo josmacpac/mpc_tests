@@ -39,4 +39,51 @@ async function fetchClienteConMascotas() {
   return cliente;
 }
 
-module.exports = { loginVet, getVetToken, fetchClienteConMascotas };
+async function seleccionarClienteYMascota(page) {
+  const cliente = await fetchClienteConMascotas();
+  await page.fill('#buscarCliente', cliente.nombre);
+  const sugerencia = page.locator('#listaSugerencias .dropdown-item').first();
+  await expect(sugerencia).toBeVisible({ timeout: 20000 });
+  await sugerencia.click();
+  await page.waitForFunction(() => {
+    const sel = document.querySelector('#selectMascotasAsociadas');
+    return sel && sel.options.length > 1;
+  }, { timeout: 20000 });
+  await page.selectOption('#selectMascotasAsociadas', { index: 1 });
+  return cliente;
+}
+
+async function fetchArticuloVenta(omitirId) {
+  const token = await getVetToken();
+  const res = await fetch(`${api.baseURL}/api/stock_disponible`, { headers: { Authorization: `Bearer ${token}` } });
+  const data = await res.json();
+  const lista = data.data || data || [];
+  const art = lista.find(a => a.sku && a.precio_venta && a.id !== omitirId) || lista.find(a => a.sku && a.precio_venta);
+  if (!art) throw new Error('No hay artículos disponibles para la venta');
+  return art;
+}
+
+async function agregarArticuloPorSugerencia(page, termino) {
+  await page.fill('#buscar-articulo-venta', termino);
+  const sugerencia = page.locator('#lista-sugerencias-venta button').first();
+  await expect(sugerencia).toBeVisible({ timeout: 15000 });
+  await sugerencia.click();
+}
+
+async function procesarVentaEnEfectivo(page, montoEfectivo = '100') {
+  await page.fill('#monto-efectivo', montoEfectivo);
+  await expect(page.locator('#btn-procesar-venta')).toBeEnabled({ timeout: 10000 });
+  const [resp] = await Promise.all([
+    page.waitForResponse(r => r.url().includes('/api/ventas/procesar') && r.request().method() === 'POST'),
+    page.click('#btn-procesar-venta'),
+  ]);
+  const data = await resp.json();
+  const folio = data.folio || data.id_venta;
+  if (!folio) throw new Error('La API no devolvió folio de venta: ' + JSON.stringify(data));
+  return folio;
+}
+
+module.exports = {
+  loginVet, getVetToken, fetchClienteConMascotas,
+  seleccionarClienteYMascota, fetchArticuloVenta, agregarArticuloPorSugerencia, procesarVentaEnEfectivo,
+};
