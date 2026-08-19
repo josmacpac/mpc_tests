@@ -14,6 +14,9 @@ test.describe('Directorio de veterinarias', () => {
   test('las veterinarias sin vincular muestran el botón Agregar', async ({ page }) => {
     await loginCliente(page);
     await page.locator('nav').locator('text=Directorio').click();
+    // Esperar a que cargue la lista de clínicas antes de contar los botones
+    await expect(page.locator('h1', { hasText: 'Directorio de Veterinarias' })).toBeVisible({ timeout: 20000 });
+    await expect(page.locator('text=Clinica Demo').first()).toBeVisible({ timeout: 20000 });
     const botones = page.locator('button', { hasText: 'Agregar veterinaria' });
     const total = await botones.count();
     if (total === 0) {

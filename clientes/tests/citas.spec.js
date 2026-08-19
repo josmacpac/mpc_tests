@@ -1,13 +1,23 @@
 const { test, expect } = require('@playwright/test');
 const { loginCliente } = require('../helpers.js');
 
-function mananaISO() {
-  // Fecha futura en el calendario local (2 días adelante para evitar límites de tz)
-  const d = new Date(Date.now() + 48 * 3600 * 1000);
+function toISO(d) {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const dia = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${dia}`;
+}
+
+async function elegirFechaConVeterinarios(page, vetSelect) {
+  const hoy = new Date();
+  for (let i = 1; i <= 7; i++) {
+    const iso = toISO(new Date(hoy.getTime() + i * 24 * 3600 * 1000));
+    await page.locator('input[type="date"]').fill(iso);
+    await expect(vetSelect).toBeEnabled({ timeout: 15000 });
+    const conVets = await vetSelect.locator('option:not([disabled])').count();
+    if (conVets > 0) return conVets;
+  }
+  return 0;
 }
 
 async function seleccionarPrimeraOpcionHabilitada(select) {
@@ -32,13 +42,11 @@ test.describe('Citas del portal de clientes', () => {
 
     await page.locator('select').nth(0).selectOption({ label: 'Firulais QA' });
     await page.locator('select').nth(1).selectOption({ index: 1 }); // primer servicio
-    await page.locator('input[type="date"]').fill(mananaISO());
 
     const vetSelect = page.locator('select').nth(2);
-    await expect(vetSelect).toBeEnabled({ timeout: 15000 });
-    const conVets = await vetSelect.locator('option:not([disabled])').count();
+    const conVets = await elegirFechaConVeterinarios(page, vetSelect);
     if (conVets === 0) {
-      test.skip(true, 'No hay veterinarios disponibles para la fecha elegida');
+      test.skip(true, 'No hay veterinarios disponibles en los próximos 7 días');
       return;
     }
     await seleccionarPrimeraOpcionHabilitada(vetSelect);
@@ -54,8 +62,9 @@ test.describe('Citas del portal de clientes', () => {
 
     await page.locator('button[type="submit"]').click();
     // Modal de confirmación
-    await expect(page.locator('text=Confirmar cita').first()).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('text=Firulais QA').first()).toBeVisible();
+    const modal = page.locator('div.bg-white.rounded-3xl');
+    await expect(modal.locator('text=Confirmar cita').first()).toBeVisible({ timeout: 10000 });
+    await expect(modal.locator('text=Firulais QA').first()).toBeVisible();
     await page.locator('button', { hasText: 'Confirmar cita' }).last().click();
     await expect(page).toHaveURL(/\/citas$/, { timeout: 15000 });
   });
