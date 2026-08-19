@@ -205,6 +205,35 @@ const requests = [
     clinicaId: true,
     test: () => pm.test('responde 200', () => pm.response.to.have.status(200)),
   }),
+  req('Mi perfil', 'GET', `${BASE}/api/portal/perfil`, {
+    folder: '12. Portal Clientes',
+    auth: '{{CLIENTE_TOKEN}}',
+    clinicaId: true,
+    test: () => {
+      pm.test('responde 200', () => pm.response.to.have.status(200));
+      const d = pm.response.json();
+      pm.test('trae datos del cliente', () => pm.expect(d).to.have.property('nombre'));
+      if (d && d.clinicas) pm.environment.set('ID_CLINICA', String(d.clinicas.id_clinica || d.clinicas.id));
+    },
+  }),
+  req('Buscar cliente existente (correo registrado)', 'POST', `${BASE}/api/portal/clientes/buscar-existente`, {
+    folder: '12. Portal Clientes',
+    body: { correo: '{{CLIENTE_EMAIL}}' },
+    test: () => {
+      pm.test('responde 200', () => pm.response.to.have.status(200));
+      const d = pm.response.json();
+      pm.test('detecta cuenta existente', () => pm.expect(d).to.have.property('existe', true));
+    },
+  }),
+  req('Buscar cliente existente (correo nuevo)', 'POST', `${BASE}/api/portal/clientes/buscar-existente`, {
+    folder: '12. Portal Clientes',
+    body: { correo: 'nuevo_qa_@y3n.store' },
+    test: () => {
+      pm.test('responde 200', () => pm.response.to.have.status(200));
+      const d = pm.response.json();
+      pm.test('no detecta cuenta nueva', () => pm.expect(d).to.have.property('existe', false));
+    },
+  }),
 ];
 
 // ---------------------------------------------------------------

@@ -26,7 +26,13 @@ mpc_tests/
 | API (Render) | https://mypetcare-api-1.onrender.com |
 | Vet (Netlify) | https://mpc-vet-dev.netlify.app |
 | Admin (Netlify) | https://mpc-admin-development.netlify.app |
-| Clientes | (pendiente) |
+| Clientes | https://clientesdev.netlify.app |
+
+> **Nota:** la API dev y el portal de clientes apuntan al proyecto Supabase restaurado
+> (`hslhhtbolndfmjhfgtxi.supabase.co`). El backup no incluía `auth.users`, por lo que las
+> cuentas de prueba se recrearon con `python scripts/crear_cuentas_test.py` (en `mypetcare_api`).
+> El servicio de Render debe tener `SUPABASE_URL`/`SUPABASE_SERVICE_KEY` apuntando a ese
+> proyecto, o los tokens serán rechazados (401).
 
 ## Requisitos
 
@@ -117,7 +123,14 @@ npx playwright show-report
   - **logout** (`logout.spec.js`): cierra sesión, regresa a `login.html` y deja el `localStorage` limpio
   - Helpers en `vet/helpers.js` (incluyen llamadas a la API dev para obtener un cliente con mascotas).
 - **admin** (https://mpc-admin-development.netlify.app) — `admin/tests/`: login, carga de clínicas, y **subida de logo** de la Clinica Demo (id 4) contra la API dev. Fixture en `admin/fixtures/logo-test.png`.
-- **clientes** — pendiente: define su URL en `qa.config.js` (campo `clientes.baseURL`) y la prueba dejará de saltarse.
+- **clientes** (https://clientesdev.netlify.app) — `clientes/tests/`:
+  - **login** (`login.spec.js`): login correcto → home con clínica activa; credenciales inválidas muestran error.
+  - **home** (`home.spec.js`): mascotas de la clínica activa, clínica visible en el encabezado, navegación inferior (Mascotas/Citas/Directorio) e ícono de perfil en la TopBar.
+  - **citas** (`citas.spec.js`): lista de citas y flujo de agendar con **modal de confirmación** (revisa detalles y confirma). Se salta si no hay veterinarios/horarios disponibles.
+  - **directorio** (`directorio.spec.js`): carga del directorio con botón regresar y botón "Agregar veterinaria" en clínicas sin vincular.
+  - **perfil** (`perfil.spec.js`): acceso desde el ícono del encabezado, veterinarias vinculadas y cierre de sesión.
+  - **registro** (`registro.spec.js`): detección de cuenta existente → modal "Ya existe una cuenta" con las opciones de asociar/otro correo.
+  - La cuenta de prueba (`test_user2@y3n.store`) vive en el proyecto restaurado con clínica 4 activa y 2 mascotas.
 
 > **Ojo:** la prueba de logo sobrescribe el logo real de la clínica 4 en el entorno dev. Es esperado.
 > **Ojo:** las pruebas de crear cliente / consulta / cita **escriben datos** en la base dev de la clínica 4. Es esperado.
