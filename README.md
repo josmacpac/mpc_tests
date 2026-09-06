@@ -6,12 +6,15 @@ Suite de pruebas QA para MyPetCare. Repo dedicado para no ensuciar los repos de 
 
 ```
 mpc_tests/
-├── api/          # Pruebas Newman (colecciones Postman) contra la API
-│   ├── collections/
-│   └── environments/
-├── vet/          # Playwright E2E para el panel veterinario
-├── clientes/     # Playwright E2E para el portal de clientes
-└── admin/        # Playwright E2E para el panel admin
+├── api/              # Pruebas de API
+│   ├── collections/  # Newman (colecciones Postman)
+│   ├── environments/ # Newman (entornos Postman)
+│   └── tests/        # Playwright API tests (FEFO, rechazos)
+├── vet/              # Playwright E2E para el panel veterinario
+│   └── tests/        # Login, mascotas, clientes, consultas, citas, ventas, inventario
+├── clientes/         # Playwright E2E para el portal de clientes
+├── admin/            # Playwright E2E para el panel admin
+└── environments/     # Archivos .env por ambiente (dev, prod, local)
 ```
 
 ## Ramas
@@ -39,7 +42,9 @@ mpc_tests/
 - Node.js 18+ (Playwright, Newman).
 - Python 3 (opcional, para scripts auxiliares de la API).
 
-## Newman (API)
+## API tests
+
+### Newman (colecciones Postman)
 
 Desde `api/`:
 
@@ -51,6 +56,20 @@ newman run collections/mpc_api.postman_collection.json \
 ```
 
 Los endpoints requieren JWT de Supabase: la colección obtiene el token en un pre-request o usa variables `TOKEN_*` del environment.
+
+### Playwright API tests (`api/tests/`)
+
+Tests de lógica de negocio directos contra la API, sin UI:
+
+```bash
+npx playwright test --project=api
+```
+
+| Test | Qué valida |
+|------|------------|
+| `fefo.spec.js` — FEFO | Dos entradas con lotes de diferente caducidad, venta que cruza ambos lotes. Verifica que el lote más antiguo se agota primero |
+| `fefo.spec.js` — Rechazo venta | Venta que excede stock total. Verifica HTTP 400 y que el stock no cambia |
+| `fefo.spec.js` — Rechazo desperdicio | Desperdicio que excede stock del lote. Verifica HTTP 400 y que el stock se mantiene |
 
 ## Cómo correr las pruebas (todo desde la terminal)
 
@@ -90,17 +109,29 @@ npx playwright install chromium
 ### Ejecución directa (sin el script)
 
 ```bash
-npm run test:choose        # selector interactivo de proyecto Playwright
-npm run test:vet           # Playwright vet
-npm run test:admin         # Playwright admin
-npm run test:clientes      # Playwright clientes
-npm test                   # Playwright: todos los proyectos
+# Playwright por proyecto
+npm run test:vet              # todos los tests del vet
+npm run test:admin            # todos los tests del admin
+npm run test:clientes         # todos los tests de clientes
+npm test                      # todos los proyectos Playwright
 
-cd api
-npm test                   # Newman: toda la colección
-npm run test:log           # + guarda reports/result.json y result-junit.xml
-npm run test:html          # + genera reports/report.html
-npm run test:auth          # solo login (verifica credenciales)
+# Por ambiente (leen environments/*.env)
+npm run test:dev              # todos contra dev
+npm run test:dev:vet          # solo vet contra dev
+npm run test:dev:admin        # solo admin contra dev
+npm run test:prod             # todos contra producción
+
+# Solo inventario
+npx playwright test --project=vet -g "artículos|entradas|inventario"
+
+# Solo FEFO (API)
+npx playwright test --project=api
+
+# Newman (API)
+cd api && npm test            # toda la colección
+npm run test:log              # + guarda reports/result.json y result-junit.xml
+npm run test:html             # + genera reports/report.html
+npm run test:auth             # solo login (verifica credenciales)
 ```
 
 Reporte HTML de Playwright:
@@ -116,13 +147,21 @@ npx playwright show-report
 ### Qué cubre cada proyecto
 
 - **vet** (https://mpc-vet-dev.netlify.app) — `vet/tests/`:
-  - login correcto, login inválido, vista de mascotas, carga de citas/reportes/clientes/artículos
-  - **crear cliente** (`clientes.spec.js`): registra un cliente único y lo busca en la tabla
-  - **registrar consulta + receta** (`consulta.spec.js`): selecciona cliente/mascota, llena signos vitales, genera receta y verifica el Swal de confirmación
-  - **crear cita** (`citas.spec.js`): flujo completo (cliente → mascota → fecha → vet → servicio → horario). **Se salta** ("skipped") si el veterinario no tiene turnos configurados en `horarios_veterinarios` — se activa sola cuando existan.
-  - **logout** (`logout.spec.js`): cierra sesión, regresa a `login.html` y deja el `localStorage` limpio
-  - Helpers en `vet/helpers.js` (incluyen llamadas a la API dev para obtener un cliente con mascotas).
-- **admin** (https://mpc-admin-development.netlify.app) — `admin/tests/`: login, carga de clínicas, y **subida de logo** de la Clinica Demo (id 4) contra la API dev. Fixture en `admin/fixtures/logo-test.png`.
+  - **login/logout** (`login.spec.js`, `logout.spec.js`): sesión correcta, credenciales inválidas, cierre limpio
+  - **mascotas** (`mascotas.spec.js`): tabla de mascotas carga correctamente
+  - **clientes** (`clientes.spec.js`): registra cliente único y lo busca en la tabla
+  - **consulta** (`consulta.spec.js`): flujo completo de consulta con receta médica (signos vitales, medicamentos, impresión)
+  - **citas** (`citas.spec.js`): flujo completo (cliente → mascota → fecha → vet → servicio → horario). Se salta si no hay turnos configurados
+  - **ventas** (`ventas.spec.js`): agregar artículos por sugerencia/SKU, cantidades, pago en efectivo con QR, recibo digital por folio
+  - **artículos** (`articulos.spec.js`): CRUD completo — listar, buscar, crear, SKU duplicado, editar, eliminar
+  - **entradas** (`entradas.spec.js`): crear entrada via UI, verificar existencias, historial de facturas, detalle de factura
+  - **inventario** (`inventario.spec.js`): flujo completo — crear artículo → entrada de stock → verificar existencias → vender → verificar stock bajó → verificar lotes → registrar desperdicio
+  - Helpers en `vet/helpers.js`: login, búsqueda de clientes/mascotas, artículos, procesamiento de ventas, helpers de inventario (CRUD vía API)
+- **admin** (https://mpc-admin-development.netlify.app) — `admin/tests/`:
+  - **login** (`login.spec.js`): login correcto muestra clínicas; credenciales inválidas se queda en login
+  - **búsqueda de usuarios** (`busqueda_usuarios.spec.js`): tabla de clínicas ordenada alfabéticamente, búsqueda de usuarios, alta de usuario ligado a la Clinica Demo
+  - **logo** (`logo.spec.js`): sube el logo de la Clinica Demo (id 4) contra la API dev. Fixture en `admin/fixtures/logo-test.png`
+  - **smoke** (`smoke.spec.js`): la app carga y muestra el login
 - **clientes** (https://clientesdev.netlify.app) — `clientes/tests/`:
   - **login** (`login.spec.js`): login correcto → home con clínica activa; credenciales inválidas muestran error.
   - **home** (`home.spec.js`): mascotas de la clínica activa, clínica visible en el encabezado, navegación inferior (Mascotas/Citas/Directorio) e ícono de perfil en la TopBar.
@@ -133,12 +172,17 @@ npx playwright show-report
   - La cuenta de prueba (`test_user2@y3n.store`) vive en el proyecto restaurado con clínica 4 activa y 2 mascotas.
 
 > **Ojo:** la prueba de logo sobrescribe el logo real de la clínica 4 en el entorno dev. Es esperado.
-> **Ojo:** las pruebas de crear cliente / consulta / cita **escriben datos** en la base dev de la clínica 4. Es esperado.
+> **Ojo:** las pruebas de crear cliente / consulta / cita / inventario **escriben datos** en la base dev de la clínica 4. Es esperado. Todos los tests crean datos únicos (`Date.now()`) para no interferirse entre sí.
 
-## Newman (API)
+### Resumen de cobertura
 
-Las pruebas de API viven en `api/` (ver `api/README.md`). El script `run.sh` las corre
-pasando las URLs/credenciales del ambiente elegido; también puedes correrlas directo:
+| Proyecto | Tests | Módulos cubiertos |
+|----------|-------|-------------------|
+| vet | 19 | Login, logout, mascotas, clientes, consultas, citas, ventas, artículos, entradas, inventario |
+| admin | 4 | Login, búsqueda de usuarios, logo, smoke |
+| clientes | 7 | Login, home, citas, directorio, perfil, registro, smoke |
+| api | 3 | FEFO, rechazo de venta, rechazo de desperdicio |
+| **Total** | **33** | |
 
 ## Cuentas de prueba (entorno dev)
 
