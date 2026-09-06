@@ -1,30 +1,38 @@
-const env = (name, fallback) => {
+// qa.config.js — Configuración central deQA.
+// Lee todas las URLs y credenciales de variables de entorno.
+// Edita los archivos en environments/*.env para cambiar los valores por ambiente.
+
+const req = (name) => {
   const v = process.env[name];
-  return v && v.length > 0 ? v : fallback;
+  if (!v) throw new Error(`Falta la variable de entorno: ${name}. Revisa el archivo en environments/*.env`);
+  return v;
 };
+
+const opt = (name, fallback) => process.env[name] || fallback;
 
 module.exports = {
   vet: {
-    baseURL: env('VET_URL', 'https://mpc-vet-dev.netlify.app'),
-    email: env('VET_EMAIL', 'demo@y3n.store'),
-    password: env('VET_PASSWORD', 'd3mo53'),
+    baseURL: req('VET_URL'),
+    email: req('VET_EMAIL'),
+    password: req('VET_PASSWORD'),
   },
   admin: {
-    baseURL: env('ADMIN_URL', 'https://mpc-admin-development.netlify.app'),
-    email: env('ADMIN_EMAIL', 'test_user1@y3n.store'),
-    password: env('ADMIN_PASSWORD', 'Test1_user_2026'),
+    baseURL: req('ADMIN_URL'),
+    email: req('ADMIN_EMAIL'),
+    password: req('ADMIN_PASSWORD'),
   },
   clientes: {
-    baseURL: env('CLIENTES_URL', 'https://clientesdev.netlify.app'),
-    email: env('CLIENTE_EMAIL', 'test_user2@y3n.store'),
-    password: env('CLIENTE_PASSWORD', 'Test2_user_2026'),
+    baseURL: req('CLIENTES_URL'),
+    email: req('CLIENTE_EMAIL'),
+    password: req('CLIENTE_PASSWORD'),
   },
   api: {
-    baseURL: env('API_URL', 'https://mypetcare-api-1.onrender.com'),
-    supabaseUrl: env('SUPABASE_URL', 'https://hslhhtbolndfmjhfgtxi.supabase.co'),
-    anonKey: env(
-      'SUPABASE_ANON_KEY',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzbGhodGJvbG5kZm1qaGZndHhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2MTE3NzAsImV4cCI6MjEwMTE4Nzc3MH0.LjRcJwne509YbW0ULryq5L1rlBT8ag1jw9Wv7XvwzHE'
-    ),
+    baseURL: req('API_URL'),
+    supabaseUrl: req('SUPABASE_URL'),
+    anonKey: req('SUPABASE_ANON_KEY'),
+  },
+  ids: {
+    clinica: opt('ID_CLINICA', '4'),
+    mascota: opt('ID_MASCOTA', '1'),
   },
 };

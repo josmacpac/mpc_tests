@@ -83,7 +83,98 @@ async function procesarVentaEnEfectivo(page, montoEfectivo = '100') {
   return folio;
 }
 
+// ---------------------------------------------------------------------------
+// Inventario — helpers para tests de artículos, entradas y existencias
+// ---------------------------------------------------------------------------
+
+async function fetchCrearArticulo(articulo) {
+  const token = await getVetToken();
+  const res = await fetch(`${api.baseURL}/api/articulos`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(articulo),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(`Error creando artículo: ${res.status} ${JSON.stringify(data)}`);
+  return data;
+}
+
+async function fetchArticulos() {
+  const token = await getVetToken();
+  const res = await fetch(`${api.baseURL}/api/articulos`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  return data.data || data || [];
+}
+
+async function fetchStockDisponible() {
+  const token = await getVetToken();
+  const res = await fetch(`${api.baseURL}/api/stock_disponible`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  return data.data || data || [];
+}
+
+async function fetchExistencias() {
+  const token = await getVetToken();
+  const res = await fetch(`${api.baseURL}/api/existencias`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  return data.data || data || [];
+}
+
+async function fetchLotesArticulo(articuloId) {
+  const token = await getVetToken();
+  const res = await fetch(`${api.baseURL}/api/existencias/lotes/${articuloId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  return data.data || data || [];
+}
+
+async function fetchCrearEntrada(entrada) {
+  const token = await getVetToken();
+  const res = await fetch(`${api.baseURL}/api/entradas`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(entrada),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(`Error creando entrada: ${res.status} ${JSON.stringify(data)}`);
+  return data;
+}
+
+async function fetchDesperdicio(desperdicio) {
+  const token = await getVetToken();
+  const res = await fetch(`${api.baseURL}/api/desperdicio`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(desperdicio),
+  });
+  const data = await res.json();
+  return { ok: res.ok, status: res.status, data };
+}
+
+function articuloTEST() {
+  const ts = Date.now();
+  return {
+    sku: `SKU-QA-${ts}`,
+    nombre_articulo: `Articulo QA ${ts}`,
+    presentacion: '4',
+    categoria_articulo: '507',
+    contenido_empaque: '1',
+    precio_venta: '150',
+    stock_minimo: '5',
+    inventario_inicial: '0',
+  };
+}
+
 module.exports = {
   loginVet, getVetToken, fetchClienteConMascotas,
   seleccionarClienteYMascota, fetchArticuloVenta, agregarArticuloPorSugerencia, procesarVentaEnEfectivo,
+  fetchCrearArticulo, fetchArticulos, fetchStockDisponible, fetchExistencias,
+  fetchLotesArticulo, fetchCrearEntrada, fetchDesperdicio, articuloTEST,
 };

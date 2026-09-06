@@ -7,7 +7,19 @@
     "test:vet": "npx playwright test --project=vet",
     "test:admin": "npx playwright test --project=admin",
     "test:clientes": "npx playwright test --project=clientes",
-    "test:choose": "node scripts/choose.js"
+    "test:choose": "node scripts/choose.js",
+    "test:dev": "bash -c 'set -a; source environments/dev.env; set +a; npx playwright test'",
+    "test:dev:vet": "bash -c 'set -a; source environments/dev.env; set +a; npx playwright test --project=vet'",
+    "test:dev:admin": "bash -c 'set -a; source environments/dev.env; set +a; npx playwright test --project=admin'",
+    "test:dev:clientes": "bash -c 'set -a; source environments/dev.env; set +a; npx playwright test --project=clientes'",
+    "test:prod": "bash -c 'set -a; source environments/prod.env; set +a; npx playwright test'",
+    "test:prod:vet": "bash -c 'set -a; source environments/prod.env; set +a; npx playwright test --project=vet'",
+    "test:prod:admin": "bash -c 'set -a; source environments/prod.env; set +a; npx playwright test --project=admin'",
+    "test:prod:clientes": "bash -c 'set -a; source environments/prod.env; set +a; npx playwright test --project=clientes'",
+    "test:local": "bash -c 'set -a; source environments/local.env; set +a; npx playwright test'",
+    "test:local:vet": "bash -c 'set -a; source environments/local.env; set +a; npx playwright test --project=vet'",
+    "test:local:admin": "bash -c 'set -a; source environments/local.env; set +a; npx playwright test --project=admin'",
+    "test:local:clientes": "bash -c 'set -a; source environments/local.env; set +a; npx playwright test --project=clientes'"
   },
   "devDependencies": {
     "@playwright/test": "^1.48.2"

@@ -1,33 +1,47 @@
 #!/usr/bin/env bash
 # ============================================================================
 # mpc_tests / run.sh
-# Elige el ambiente (local | dev | prod) y qué pruebas correr.
-# Uso:  ./run.sh
+# Elige el ambiente y qué pruebas correr.
+#
+# Uso:
+#   ./run.sh                  ← interactivo (elige ambiente y pruebas)
+#   ./run.sh dev              ← ambiente dev, modo interactivo para pruebas
+#   ./run.sh prod vet         ← ambiente prod, solo pruebas vet
+#   ./run.sh local admin      ← ambiente local, solo pruebas admin
 # ============================================================================
 set -euo pipefail
 cd "$(dirname "$0")"
 
 ENV_DIR="environments"
 
-echo "=============================================="
-echo "  mpc_tests - Selector de pruebas"
-echo "=============================================="
-
 # ------------------------- 1. Ambiente -------------------------
-echo ""
-echo "¿A qué ambiente apuntan las pruebas?"
-echo "  1) local    API http://127.0.0.1:5000 + frontends en localhost"
-echo "  2) dev      Render + Netlify dev (recomendado)"
-echo "  3) prod     Producción real (¡requiere confirmación!)"
-read -r -p "Elige (1-3) [2]: " amb || amb=""
-amb="${amb:-2}"
+if [ "${1:-}" ]; then
+  case "$1" in
+    1|local)  ENV_FILE="$ENV_DIR/local.env" ;;
+    2|dev)    ENV_FILE="$ENV_DIR/dev.env" ;;
+    3|prod)   ENV_FILE="$ENV_DIR/prod.env" ;;
+    *) echo "Ambiente inválido: $1  (usa: local, dev o prod)"; exit 1 ;;
+  esac
+  shift
+else
+  echo "=============================================="
+  echo "  mpc_tests - Selector de pruebas"
+  echo "=============================================="
+  echo ""
+  echo "¿A qué ambiente apuntan las pruebas?"
+  echo "  1) local    API http://127.0.0.1:5000 + frontends en localhost"
+  echo "  2) dev      Render + Netlify dev (recomendado)"
+  echo "  3) prod     Producción real (¡requiere confirmación!)"
+  read -r -p "Elige (1-3) [2]: " amb || amb=""
+  amb="${amb:-2}"
 
-case "$amb" in
-  1) ENV_FILE="$ENV_DIR/local.env" ;;
-  2) ENV_FILE="$ENV_DIR/dev.env" ;;
-  3) ENV_FILE="$ENV_DIR/prod.env" ;;
-  *) echo "Opción inválida: $amb"; exit 1 ;;
-esac
+  case "$amb" in
+    1) ENV_FILE="$ENV_DIR/local.env" ;;
+    2) ENV_FILE="$ENV_DIR/dev.env" ;;
+    3) ENV_FILE="$ENV_DIR/prod.env" ;;
+    *) echo "Opción inválida: $amb"; exit 1 ;;
+  esac
+fi
 
 if [ ! -f "$ENV_FILE" ]; then
   echo "No existe el archivo de ambiente: $ENV_FILE"; exit 1
@@ -42,14 +56,25 @@ if [ "$ENV_NAME" = "prod" ]; then
 fi
 
 # ------------------------- 2. Pruebas -------------------------
-echo ""
-echo "¿Qué pruebas quieres correr?"
-echo "  1) Newman API        (colección completa contra $API_URL)"
-echo "  2) Playwright vet    (${VET_URL})"
-echo "  3) Playwright admin  (${ADMIN_URL})"
-echo "  4) Playwright clientes (${CLIENTES_URL:-URL no configurada})"
-echo "  5) Todo              (Newman + Playwright)"
-read -r -p "Elige (1-5): " tests || tests=""
+if [ "${1:-}" ]; then
+  case "$1" in
+    newman|api)   tests="1" ;;
+    vet)          tests="2" ;;
+    admin)        tests="3" ;;
+    clientes)     tests="4" ;;
+    all)          tests="5" ;;
+    *) echo "Tipo de prueba inválido: $1  (usa: vet, admin, clientes, api, all)"; exit 1 ;;
+  esac
+else
+  echo ""
+  echo "¿Qué pruebas quieres correr?"
+  echo "  1) Newman API        (colección completa contra $API_URL)"
+  echo "  2) Playwright vet    (${VET_URL})"
+  echo "  3) Playwright admin  (${ADMIN_URL})"
+  echo "  4) Playwright clientes (${CLIENTES_URL:-URL no configurada})"
+  echo "  5) Todo              (Newman + Playwright)"
+  read -r -p "Elige (1-5): " tests || tests=""
+fi
 
 run_newman() {
   echo ""

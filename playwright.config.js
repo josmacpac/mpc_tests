@@ -30,5 +30,10 @@ module.exports = defineConfig({
       testDir: './clientes/tests',
       use: { baseURL: config.clientes.baseURL },
     },
+    {
+      name: 'api',
+      testDir: './api/tests',
+      use: { baseURL: config.api.baseURL },
+    },
   ],
 });
