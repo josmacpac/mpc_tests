@@ -11,4 +11,9 @@ test-results/
 reports/
 .DS_Store
 storageState-*.json
-.env
+
+# Credenciales de ambientes (solo subir los .example)
+environments/dev.env
+environments/local.env
+environments/prod.env
+api/environments/mpc_dev.postman_environment.json
