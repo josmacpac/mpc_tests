@@ -1,10 +1,11 @@
 const { test, expect } = require('@playwright/test');
-const { loginVet } = require('../helpers.js');
+const { loginVet, waitForPageReady } = require('../helpers.js');
 
 test.describe('Módulo de clientes', () => {
   test('crea un nuevo cliente y aparece en la tabla', async ({ page }) => {
     await loginVet(page);
-    await page.goto('/clientes');
+    await page.goto('clientes');
+    await waitForPageReady(page);
 
     const nombreUnico = `Cliente QA ${Date.now()}`;
 

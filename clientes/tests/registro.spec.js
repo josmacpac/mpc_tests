@@ -3,7 +3,7 @@ const { clientes } = require('../../qa.config.js');
 
 test.describe('Registro del portal de clientes', () => {
   test('detecta una cuenta existente y muestra el modal de asociación', async ({ page }) => {
-    await page.goto('/registro');
+    await page.goto('registro');
     await page.fill('input[type="text"]', 'QA Registro Nuevo');
     await page.fill('input[type="tel"]', '6141112233');
     await page.fill('input[type="email"]', clientes.email);

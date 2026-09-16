@@ -9,7 +9,7 @@ test.describe('Login del panel vet', () => {
   });
 
   test('login con credenciales invalidas muestra error y se queda en login', async ({ page }) => {
-    await page.goto('/login.html');
+    await page.goto('login.html');
     await page.fill('#email-input', 'noexiste@y3n.store');
     await page.fill('#password-input', 'incorrecta');
     await page.click('#loginBtn');

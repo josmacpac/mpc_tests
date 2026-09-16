@@ -9,7 +9,7 @@ test.describe('Login del panel admin', () => {
   });
 
   test('login con credenciales invalidas se queda en login', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('');
     await page.fill('#email', 'nadie@y3n.store');
     await page.fill('#pass', 'incorrecta');
     await page.click('#loginBtn');

@@ -2,7 +2,7 @@ const { expect } = require('@playwright/test');
 const { vet, api } = require('../qa.config.js');
 
 async function loginVet(page) {
-  await page.goto('/login.html');
+  await page.goto('login.html');
   await page.fill('#email-input', vet.email);
   await page.fill('#password-input', vet.password);
   await Promise.all([
@@ -11,6 +11,13 @@ async function loginVet(page) {
   ]);
   await expect(page.locator('#nombreClinica')).not.toHaveText(/Cargando clínica/, { timeout: 20000 });
   await expect(page.locator('#userName')).not.toHaveText('Cargando...', { timeout: 20000 });
+}
+
+async function waitForPageReady(page) {
+  await page.waitForFunction(
+    () => getComputedStyle(document.documentElement).display !== 'none',
+    { timeout: 15000 }
+  );
 }
 
 async function getVetToken() {
@@ -137,9 +144,31 @@ async function fetchLotesArticulo(articuloId) {
 
 async function fetchCrearEntrada(entrada) {
   const token = await getVetToken();
+  const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+
+  // Resolver id_proveedor si es null
+  if (!entrada.cabecera.id_proveedor) {
+    const resProv = await fetch(`${api.baseURL}/api/proveedores`, { headers });
+    const provs = await resProv.json();
+    const lista = provs.data || provs || [];
+    if (lista.length > 0) {
+      entrada.cabecera.id_proveedor = lista[0].id;
+    }
+  }
+
+  // Resolver articulo_id en items si es null (buscar por SKU del artículo)
+  for (const item of entrada.items) {
+    if (!item.articulo_id && item.sku) {
+      const resArt = await fetch(`${api.baseURL}/api/articulos?sku=${encodeURIComponent(item.sku)}`, { headers });
+      const arts = await resArt.json();
+      const found = (arts.data || arts || [])[0];
+      if (found) item.articulo_id = found.id;
+    }
+  }
+
   const res = await fetch(`${api.baseURL}/api/entradas`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify(entrada),
   });
   const data = await res.json();
@@ -158,6 +187,13 @@ async function fetchDesperdicio(desperdicio) {
   return { ok: res.ok, status: res.status, data };
 }
 
+function getStockTotal(stockItem) {
+  const v = stockItem.vista_articulos_disponibles;
+  if (Array.isArray(v) && v.length > 0) return v[0].total_stock || 0;
+  if (v && v.total_stock) return v.total_stock;
+  return stockItem.total_stock || 0;
+}
+
 function articuloTEST() {
   const ts = Date.now();
   return {
@@ -173,8 +209,8 @@ function articuloTEST() {
 }
 
 module.exports = {
-  loginVet, getVetToken, fetchClienteConMascotas,
+  loginVet, waitForPageReady, getVetToken, fetchClienteConMascotas,
   seleccionarClienteYMascota, fetchArticuloVenta, agregarArticuloPorSugerencia, procesarVentaEnEfectivo,
   fetchCrearArticulo, fetchArticulos, fetchStockDisponible, fetchExistencias,
-  fetchLotesArticulo, fetchCrearEntrada, fetchDesperdicio, articuloTEST,
+  fetchLotesArticulo, fetchCrearEntrada, fetchDesperdicio, articuloTEST, getStockTotal,
 };

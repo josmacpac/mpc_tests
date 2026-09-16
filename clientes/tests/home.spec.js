@@ -13,7 +13,7 @@ test.describe('Home del portal de clientes', () => {
   });
 
   test('muestra la clínica actual en el encabezado', async ({ page }) => {
-    await expect(page.locator('header')).toContainText('Clinica Demo', { timeout: 20000 });
+    await expect(page.locator('header')).toContainText('Clinica_pruebas2', { timeout: 20000 });
   });
 
   test('la navegación inferior tiene Mascotas/Citas/Directorio (sin Perfil)', async ({ page }) => {

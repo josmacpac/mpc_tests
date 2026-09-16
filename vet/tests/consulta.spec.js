@@ -1,10 +1,11 @@
 const { test, expect } = require('@playwright/test');
-const { loginVet, fetchClienteConMascotas, seleccionarClienteYMascota } = require('../helpers.js');
+const { loginVet, waitForPageReady, fetchClienteConMascotas, seleccionarClienteYMascota } = require('../helpers.js');
 
 test.describe('Registrar consulta con receta', () => {
   test('guarda una consulta y su receta', async ({ page }) => {
     await loginVet(page);
-    await page.goto('/consulta.html');
+    await page.goto('consulta.html');
+    await waitForPageReady(page);
 
     const cliente = await fetchClienteConMascotas();
 
@@ -53,7 +54,8 @@ test.describe('Registrar consulta con receta', () => {
 
   test('muestra advertencia si no hay mascota seleccionada', async ({ page }) => {
     await loginVet(page);
-    await page.goto('/consulta.html');
+    await page.goto('consulta.html');
+    await waitForPageReady(page);
 
     await page.click('button[onclick="enviarConsulta()"]');
 
@@ -63,7 +65,8 @@ test.describe('Registrar consulta con receta', () => {
 
   test('exige completar la receta antes de guardar', async ({ page }) => {
     await loginVet(page);
-    await page.goto('/consulta.html');
+    await page.goto('consulta.html');
+    await waitForPageReady(page);
 
     await seleccionarClienteYMascota(page);
     await page.selectOption('#selectVeterinario', { index: 1 });
@@ -80,7 +83,8 @@ test.describe('Registrar consulta con receta', () => {
 
   test('guarda una consulta con receta de dos medicamentos', async ({ page }) => {
     await loginVet(page);
-    await page.goto('/consulta.html');
+    await page.goto('consulta.html');
+    await waitForPageReady(page);
 
     await seleccionarClienteYMascota(page);
 
@@ -120,7 +124,8 @@ test.describe('Registrar consulta con receta', () => {
 
   test('imprime la receta en una nueva ventana', async ({ page }) => {
     await loginVet(page);
-    await page.goto('/consulta.html');
+    await page.goto('consulta.html');
+    await waitForPageReady(page);
 
     await seleccionarClienteYMascota(page);
     await page.selectOption('#selectVeterinario', { index: 1 });

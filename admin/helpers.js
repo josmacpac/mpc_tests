@@ -2,7 +2,7 @@ const { expect } = require('@playwright/test');
 const { admin } = require('../qa.config.js');
 
 async function loginAdmin(page) {
-  await page.goto('/');
+  await page.goto('');
   await page.fill('#email', admin.email);
   await page.fill('#pass', admin.password);
   await page.click('#loginBtn');

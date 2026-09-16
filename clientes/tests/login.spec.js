@@ -9,7 +9,7 @@ test.describe('Login del portal de clientes', () => {
   });
 
   test('credenciales inválidas muestran error y se queda en login', async ({ page }) => {
-    await page.goto('/login');
+    await page.goto('login');
     await page.fill('input[type="email"]', 'noexiste@y3n.store');
     await page.fill('input[type="password"]', 'incorrecta123');
     await page.click('button[type="submit"]');

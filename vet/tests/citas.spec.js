@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test');
-const { loginVet, fetchClienteConMascotas } = require('../helpers.js');
+const { loginVet, waitForPageReady, fetchClienteConMascotas } = require('../helpers.js');
 
 function fechaFutura(dias = 2) {
   const d = new Date();
@@ -37,7 +37,8 @@ async function seleccionarClienteYMascota(page, nombre) {
 test.describe('Módulo de citas', () => {
   test('agenda una nueva cita (skip si no hay horarios configurados)', async ({ page }) => {
     await loginVet(page);
-    await page.goto('/citas');
+    await page.goto('citas');
+    await waitForPageReady(page);
 
     const cliente = await fetchClienteConMascotas();
     const nombreMascota = cliente.mascotas[0].nombre_mascota;

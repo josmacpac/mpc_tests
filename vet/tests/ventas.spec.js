@@ -1,11 +1,12 @@
 const { test, expect } = require('@playwright/test');
-const { loginVet, fetchArticuloVenta, agregarArticuloPorSugerencia, procesarVentaEnEfectivo } = require('../helpers.js');
+const { loginVet, waitForPageReady, fetchArticuloVenta, agregarArticuloPorSugerencia, procesarVentaEnEfectivo } = require('../helpers.js');
 
 test.describe('Módulo de ventas', () => {
 
   test('agrega un artículo al carrito desde las sugerencias y muestra totales', async ({ page }) => {
     await loginVet(page);
-    await page.goto('/ventas.html');
+    await page.goto('ventas.html');
+    await waitForPageReady(page);
 
     const art = await fetchArticuloVenta();
     await agregarArticuloPorSugerencia(page, art.nombre_articulo);
@@ -19,7 +20,8 @@ test.describe('Módulo de ventas', () => {
 
   test('agrega un artículo al carrito escribiendo su SKU y presionando Enter', async ({ page }) => {
     await loginVet(page);
-    await page.goto('/ventas.html');
+    await page.goto('ventas.html');
+    await waitForPageReady(page);
 
     const art = await fetchArticuloVenta();
     await page.fill('#buscar-articulo-venta', art.sku);
@@ -31,7 +33,8 @@ test.describe('Módulo de ventas', () => {
 
   test('cambia cantidades y elimina artículos del carrito', async ({ page }) => {
     await loginVet(page);
-    await page.goto('/ventas.html');
+    await page.goto('ventas.html');
+    await waitForPageReady(page);
 
     const artA = await fetchArticuloVenta();
     const artB = await fetchArticuloVenta(artA.id);
@@ -58,7 +61,8 @@ test.describe('Módulo de ventas', () => {
 
   test('procesa una venta en efectivo y muestra el modal de recibo con QR', async ({ page }) => {
     await loginVet(page);
-    await page.goto('/ventas.html');
+    await page.goto('ventas.html');
+    await waitForPageReady(page);
 
     const art = await fetchArticuloVenta();
     await agregarArticuloPorSugerencia(page, art.nombre_articulo);
@@ -79,7 +83,7 @@ test.describe('Módulo de ventas', () => {
     await expect(page.locator('.swal2-title')).toHaveText('¡Venta Procesada Exitosamente!', { timeout: 15000 });
     await expect(page.locator('.swal2-html-container')).toContainText('CAMBIO A ENTREGAR');
     await expect(page.locator('#btn-swal-whatsapp')).toBeVisible();
-    await expect(page.locator('#modal-qrcode canvas, #modal-qrcode img').first()).toBeVisible();
+    await expect(page.locator('#modal-qrcode img')).toBeVisible({ timeout: 10000 });
 
     // "Nueva Venta (Limpiar)" vacía el carrito
     await page.locator('.swal2-confirm').click();
@@ -88,7 +92,8 @@ test.describe('Módulo de ventas', () => {
 
   test('el recibo digital se abre por folio y muestra el ticket', async ({ page }) => {
     await loginVet(page);
-    await page.goto('/ventas.html');
+    await page.goto('ventas.html');
+    await waitForPageReady(page);
 
     const art = await fetchArticuloVenta();
     await agregarArticuloPorSugerencia(page, art.nombre_articulo);
@@ -96,7 +101,7 @@ test.describe('Módulo de ventas', () => {
     const folio = await procesarVentaEnEfectivo(page, '100');
     await page.locator('.swal2-confirm').click();
 
-    await page.goto(`/recibo_venta.html?folio=${folio}`);
+    await page.goto(`recibo_venta.html?folio=${folio}`);
     await expect(page.locator('#ticket-folio')).toContainText(folio, { timeout: 15000 });
     await expect(page.locator('#ticket-items-body tr')).toHaveCount(1);
     await expect(page.locator('#ticket-items-body')).toContainText(art.nombre_articulo);

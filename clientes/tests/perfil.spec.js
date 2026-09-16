@@ -9,7 +9,7 @@ test.describe('Perfil del portal de clientes', () => {
     await expect(page.locator('h1', { hasText: 'Mi Perfil' })).toBeVisible({ timeout: 20000 });
     await expect(page.locator('text=Test User2')).toBeVisible();
     await expect(page.locator('h3', { hasText: 'Mis veterinarias' })).toBeVisible();
-    await expect(page.locator('text=Clinica Demo')).toBeVisible();
+    await expect(page.locator('text=Clinica_pruebas2')).toBeVisible();
   });
 
   test('cerrar sesión regresa al login y limpia la sesión', async ({ page }) => {
