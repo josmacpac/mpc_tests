@@ -31,6 +31,23 @@ mpc_tests/
 | Admin (Netlify) | https://mpc-admin-development.netlify.app |
 | Clientes | https://clientesdev.netlify.app |
 
+### Entorno local (Docker)
+
+Para correr tests contra el entorno local, se necesita el `mpc-docker` corriendo:
+
+```bash
+cd mpc-docker
+docker compose up -d
+```
+
+Esto levanta nginx en `localhost:80` (frontends) y la API en `localhost:5000`.
+
+```bash
+# Correr tests contra local
+npm run test:local:vet    # solo vet
+npm run test:local        # todos
+```
+
 > **Nota:** la API dev y el portal de clientes apuntan al proyecto Supabase restaurado
 > (`hslhhtbolndfmjhfgtxi.supabase.co`). El backup no incluía `auth.users`, por lo que las
 > cuentas de prueba se recrearon con `python scripts/crear_cuentas_test.py` (en `mypetcare_api`).
@@ -153,9 +170,10 @@ npx playwright show-report
   - **consulta** (`consulta.spec.js`): flujo completo de consulta con receta médica (signos vitales, medicamentos, impresión)
   - **citas** (`citas.spec.js`): flujo completo (cliente → mascota → fecha → vet → servicio → horario). Se salta si no hay turnos configurados
   - **ventas** (`ventas.spec.js`): agregar artículos por sugerencia/SKU, cantidades, pago en efectivo con QR, recibo digital por folio
-  - **artículos** (`articulos.spec.js`): CRUD completo — listar, buscar, crear, SKU duplicado, editar, eliminar
-  - **entradas** (`entradas.spec.js`): crear entrada via UI, verificar existencias, historial de facturas, detalle de factura
-  - **inventario** (`inventario.spec.js`): flujo completo — crear artículo → entrada de stock → verificar existencias → vender → verificar stock bajó → verificar lotes → registrar desperdicio
+  - **artículos** (`articulos.spec.js`): CRUD completo — listar, buscar, crear con inventario, SKU duplicado, editar, eliminar
+  - **entradas** (`entradas.spec.js`): crear entrada via UI, verificar existencias en tabla, historial de facturas, detalle de factura
+  - **inventario** (`inventario.spec.js`): crear artículo → verificar tabla, verificar existencias de artículo con stock, vender y verificar stock bajó, verificar lotes, verificar existencias desde interfaz, flujo completo vender y verificar
+  - **vistas** (`vistas.spec.js`): carga de vistas del panel (citas, reportes, clientes, artículos) con nombre de clínica visible
   - Helpers en `vet/helpers.js`: login, búsqueda de clientes/mascotas, artículos, procesamiento de ventas, helpers de inventario (CRUD vía API)
 - **admin** (https://mpc-admin-development.netlify.app) — `admin/tests/`:
   - **login** (`login.spec.js`): login correcto muestra clínicas; credenciales inválidas se queda en login
@@ -172,17 +190,17 @@ npx playwright show-report
   - La cuenta de prueba (`test_user2@y3n.store`) vive en el proyecto restaurado con clínica 4 activa y 2 mascotas.
 
 > **Ojo:** la prueba de logo sobrescribe el logo real de la clínica 4 en el entorno dev. Es esperado.
-> **Ojo:** las pruebas de crear cliente / consulta / cita / inventario **escriben datos** en la base dev de la clínica 4. Es esperado. Todos los tests crean datos únicos (`Date.now()`) para no interferirse entre sí.
+> **Ojo:** las pruebas de crear cliente / consulta / cita / inventario **escriben datos** en la base dev de la clínica 28 (local) / 4 (dev). Es esperado. Todos los tests crean datos únicos (`Date.now()`) para no interferirse entre sí.
 
 ### Resumen de cobertura
 
 | Proyecto | Tests | Módulos cubiertos |
 |----------|-------|-------------------|
-| vet | 19 | Login, logout, mascotas, clientes, consultas, citas, ventas, artículos, entradas, inventario |
-| admin | 4 | Login, búsqueda de usuarios, logo, smoke |
-| clientes | 7 | Login, home, citas, directorio, perfil, registro, smoke |
+| vet | 36 | Login, logout, mascotas, clientes, consultas, citas, ventas, artículos (CRUD), entradas de stock (UI), inventario (flujo completo), vistas del panel |
+| admin | 7 | Login, búsqueda de usuarios, logo, smoke |
+| clientes | 14 | Login, home, citas, directorio, perfil, registro, smoke |
 | api | 3 | FEFO, rechazo de venta, rechazo de desperdicio |
-| **Total** | **33** | |
+| **Total** | **60** | |
 
 ## Cuentas de prueba (entorno dev)
 
